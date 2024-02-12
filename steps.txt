@@ -1,0 +1,114 @@
+1. Install Mysql
+
+2. Install NodeJS
+
+3. Move to mysql command line, type in this stuff.
+        mysql -u root -p
+        enter root password: The password we initially chose.
+
+        CREATE DATABASE students;
+        USE students;
+
+        CREATE TABLE student (
+            rollno INT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            branch VARCHAR(255) NOT NULL,
+            dob DATE NOT NULL
+        );
+
+        INSERT INTO student (rollno, name, branch, dob) VALUES
+        (1, 'John Doe', 'Computer Science', '1999-05-15'),
+        (2, 'Jane Smith', 'Electrical Engineering', '2000-02-20'),
+        (3, 'Alice Johnson', 'Mechanical Engineering', '1998-10-10'),
+        (4, 'Bob Williams', 'Civil Engineering', '1997-07-25'),
+        (5, 'Sarah Brown', 'Chemical Engineering', '1999-12-05');
+
+4. Create a folder called CRUDStudent or anything you like. 
+        npm init -y
+        npm install express mysql
+
+5. Create a file named app.js add the following code below
+        const express = require('express'); 
+        const mysql = require('mysql');
+
+        const app = express();
+
+        // enter ur db credentials that you initially used
+        const db = mysql.createConnection({
+        host: 'localhost',
+        user: 'your_username',
+        password: 'your_password',
+        database: 'students'
+        });
+
+        // connect 2 the db that we just created in the previous cmdline steps
+        db.connect((err) => {
+        if (err) {
+            throw err;
+        }
+        console.log('Connected to MySQL database');
+        });
+
+        // it's a middleware code, basically used to convert data into JSON -> don't worry too much about it.
+        app.use(express.json());
+
+        // The main part, the crud aspect of our whole application.
+        // get student list
+        app.get('/students', (req, res) => {
+        const sql = 'SELECT * FROM student';
+        db.query(sql, (err, result) => {
+            if (err) {
+            throw err;
+            }
+            res.json(result);
+        });
+        });
+
+        // add a new student to 
+        app.post('/students', (req, res) => {
+        const { rollno, name, branch, dob } = req.body;
+        const sql = 'INSERT INTO student (rollno, name, branch, dob) VALUES (?, ?, ?, ?)';
+        db.query(sql, [rollno, name, branch, dob], (err, result) => {
+            if (err) {
+            throw err;
+            }
+            res.send('Student added');
+        });
+        });
+
+        // delete a student. Basically uses slugs to extract data of student then runs query
+        app.delete('/students/:rollno', (req, res) => {
+        const rollno = req.params.rollno;
+        const sql = 'DELETE FROM student WHERE rollno = ?';
+        db.query(sql, rollno, (err, result) => {
+            if (err) {
+            throw err;
+            }
+            res.send('Student deleted');
+        });
+        });
+
+        // Update a student
+        app.put('/students/:rollno', (req, res) => {
+        const rollno = req.params.rollno;
+        const { name, branch, dob } = req.body;
+        const sql = 'UPDATE student SET name = ?, branch = ?, dob = ? WHERE rollno = ?';
+        db.query(sql, [name, branch, dob, rollno], (err, result) => {
+            if (err) {
+            throw err;
+            }
+            res.send('Student updated');
+        });
+        });
+
+        // Start server
+        const port = 3000;
+        app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+        });
+
+6. Run the Node application.
+
+        node app.js
+
+        
